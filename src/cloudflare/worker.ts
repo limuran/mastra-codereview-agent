@@ -49,7 +49,7 @@ export default {
   }
 };
 
-// Deployment configuration
+// Deployment configuration using correct version
 export const deployer = new CloudflareDeployer({
   name: 'mastra-codereview-agent',
   compatibilityDate: '2024-01-01',
