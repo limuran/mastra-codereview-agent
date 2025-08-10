@@ -1,25 +1,19 @@
 # Mastra Code Review Agent
 
-一个基于 Mastra 和 Claude 的智能代码审查代理，提供两种部署模式：**Mastra 服务器模式**和**独立 Cloudflare Workers 模式**。
+基于 Mastra 架构的智能代码审查代理：**Cloudflare Workers → MastraClient → Mastra Server → Claude API**
 
-## 🚀 部署模式对比
+## 🏗️ 架构设计
 
-### 模式 1: Mastra 服务器 + Cloudflare Workers
 ```
-外部请求 → Cloudflare Workers → MastraClient → Mastra Server → Claude API
+用户请求 → Cloudflare Workers → MastraClient → Mastra Server → Claude API
 ```
-- ✅ 完整的 Mastra 功能（工作流、记忆、日志等）
-- ✅ 适合复杂的 AI 应用
-- ❌ 需要运行 Mastra 服务器
 
-### 模式 2: 独立 Cloudflare Workers ⭐**推荐简单使用**
-```
-外部请求 → Cloudflare Workers → 直接调用 Claude API
-```
-- ✅ 完全无服务器，零维护
-- ✅ 更快的响应速度
-- ✅ 更低的复杂度和成本
-- ❌ 不支持 Mastra 的高级功能
+### 优势
+- ✅ **完整的 Mastra 生态系统**：工作流、代理管理、记忆功能
+- ✅ **可扩展性强**：易于添加新的代理和工作流
+- ✅ **企业级架构**：适合复杂的 AI 应用场景
+- ✅ **状态管理**：支持记忆和上下文保持
+- ✅ **监控和日志**：完整的请求链路追踪
 
 ## 功能特性
 
@@ -27,8 +21,9 @@
 - 🛡️ 安全漏洞检测
 - ⚡ 性能优化建议
 - 📝 代码质量评估
-- 🚀 支持部署到 Cloudflare Workers
 - 🤖 使用 Claude 3.5 Sonnet 模型
+- 🔄 支持工作流编排
+- 💾 代理记忆功能
 
 ## 快速开始
 
@@ -51,68 +46,124 @@ npm install
 cp .env.example .env
 ```
 
-编辑 `.env` 文件，添加你的 Anthropic API Key：
+编辑 `.env` 文件：
 
-```
+```env
+# 必需：Anthropic API Key
 ANTHROPIC_API_KEY=your-anthropic-api-key-here
+
+# Mastra 服务器配置
+MASTRA_BASE_URL=http://localhost:4111
+
+# 生产环境可能需要的配置
+# MASTRA_BASE_URL=https://your-mastra-server.com
 ```
 
-## 🎯 推荐：独立模式部署（零服务器）
+### 4. 启动 Mastra 服务器
 
-### 快速部署到 Cloudflare Workers
+```bash
+npm run dev
+```
+
+服务器将在 `http://localhost:4111` 启动，包含：
+- 代码审查代理
+- 工作流引擎
+- API 端点
+
+### 5. 测试本地功能
+
+```bash
+# 测试代码审查 API
+curl -X POST http://localhost:4111/api/review \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "function calculateTotal(items) { let total = 0; for(let i = 0; i < items.length; i++) { total += items[i].price * items[i].quantity; } return total; }",
+    "language": "javascript",
+    "filename": "calculator.js",
+    "context": "E-commerce shopping cart calculation"
+  }'
+```
+
+## 🚀 部署到生产环境
+
+### 第一步：部署 Mastra 服务器
+
+选择你的服务器平台：
+
+#### 选项 A：使用 Railway
+```bash
+# 1. 安装 Railway CLI
+npm install -g @railway/cli
+
+# 2. 登录
+railway login
+
+# 3. 创建项目
+railway init
+
+# 4. 设置环境变量
+railway variables set ANTHROPIC_API_KEY=your-key-here
+
+# 5. 部署
+railway up
+```
+
+#### 选项 B：使用 Vercel
+```bash
+# 1. 安装 Vercel CLI
+npm install -g vercel
+
+# 2. 部署
+vercel
+
+# 3. 设置环境变量
+vercel env add ANTHROPIC_API_KEY
+```
+
+#### 选项 C：使用 Docker
+```dockerfile
+# Dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 4111
+CMD ["npm", "run", "start"]
+```
+
+### 第二步：部署 Cloudflare Workers
 
 ```bash
 # 1. 登录 Cloudflare
 wrangler login
 
-# 2. 设置 API Key
-wrangler secret put ANTHROPIC_API_KEY --config wrangler.standalone.toml
+# 2. 更新 Mastra 服务器地址
+# 编辑 wrangler.toml 中的 MASTRA_BASE_URL
 
-# 3. 部署
-npm run deploy:standalone
+# 3. 部署 Worker
+wrangler deploy
 ```
 
-### 测试独立部署
+### 第三步：更新 Worker 配置
 
-```bash
-curl -X POST https://your-worker.workers.dev/api/review \
-  -H "Content-Type: application/json" \
-  -d '{
-    "code": "function add(a, b) { return a + b; }",
-    "language": "javascript",
-    "filename": "math.js"
-  }'
+编辑 `wrangler.toml`：
+
+```toml
+[env.production]
+name = "mastra-codereview-agent"
+compatibility_date = "2024-01-01"
+node_compat = true
+
+[vars]
+MASTRA_BASE_URL = "https://your-mastra-server.railway.app"  # 你的 Mastra 服务器地址
 ```
 
-## 🔧 开发模式
-
-### Mastra 开发模式
-
-```bash
-# 启动 Mastra 服务器
-npm run dev
-
-# 在另一个终端测试
-curl -X POST http://localhost:4111/api/review \
-  -H "Content-Type: application/json" \
-  -d '{"code": "console.log(\"test\")", "language": "javascript"}'
-```
-
-### 独立模式本地测试
-
-```bash
-# 本地预览独立 Worker
-npm run preview:standalone
-```
-
-## API 使用
+## 📊 API 使用
 
 ### POST /api/review
 
-审查代码的 API 端点。
-
 **请求体：**
-
 ```json
 {
   "code": "your code here",
@@ -123,7 +174,6 @@ npm run preview:standalone
 ```
 
 **响应：**
-
 ```json
 {
   "success": true,
@@ -134,15 +184,15 @@ npm run preview:standalone
         "type": "security",
         "severity": "high",
         "line": 2,
-        "description": "SQL injection vulnerability",
-        "suggestion": "Use parameterized queries"
+        "description": "Potential SQL injection vulnerability",
+        "suggestion": "Use parameterized queries instead of string concatenation"
       }
     ],
     "positive_aspects": [
       "Clear variable naming",
       "Good function structure"
     ],
-    "summary": "Code needs security improvements but has good structure"
+    "summary": "Code has security concerns but good overall structure"
   }
 }
 ```
@@ -151,121 +201,180 @@ npm run preview:standalone
 
 ```
 src/
-├── mastra/                    # Mastra 服务器模式
-│   └── index.ts              # Mastra 实例定义
-├── agents/                   # AI 代理定义
+├── mastra/           # 🎯 Mastra 服务器入口点
+│   └── index.ts      # Mastra 实例配置
+├── agents/           # 🤖 AI 代理定义
 │   └── codeReviewer.ts
-├── workflows/               # 工作流程定义
+├── workflows/        # 🔄 工作流程定义
 │   └── reviewWorkflow.ts
-├── api/                     # API 处理程序 (MastraClient 模式)
+├── api/             # 🌐 API 处理器（使用 MastraClient）
 │   └── review.ts
-├── cloudflare/
-│   ├── worker.ts            # Mastra 服务器模式的 Worker
-│   └── standalone-worker.ts # 🌟 独立模式 Worker
-└── index.ts                 # 主入口文件
+├── cloudflare/      # ☁️ Cloudflare Workers
+│   └── worker.ts     # Worker 入口点
+└── index.ts         # 主入口文件
 ```
 
-## 📦 部署选项
+## 🔧 架构优势详解
 
-### 选项 1: 独立模式（推荐）
+### 1. **Mastra 服务器层**
+- 集中管理所有 AI 代理
+- 工作流编排和执行
+- 状态和记忆管理
+- 统一的日志和监控
 
-```bash
-# 配置文件: wrangler.standalone.toml
-npm run deploy:standalone
-```
+### 2. **Cloudflare Workers 层**
+- 全球边缘计算节点
+- 自动扩容和负载均衡
+- CORS 处理和 API 网关功能
+- 快速冷启动
 
-**优点：**
-- 零服务器维护
-- 更快的冷启动
-- 更低的成本
-- 完全无状态
+### 3. **MastraClient 连接**
+- 类型安全的 API 调用
+- 自动重试和错误处理
+- 支持流式响应
+- 统一的接口规范
 
-### 选项 2: Mastra 服务器模式
+## 🛠️ 开发和自定义
 
-```bash
-# 1. 启动 Mastra 服务器
-npm run dev  # 或部署到服务器
-
-# 2. 部署 Worker 连接到服务器
-wrangler deploy  # 使用 wrangler.toml
-```
-
-**优点：**
-- 完整的 Mastra 生态系统
-- 支持复杂工作流
-- 内置记忆和日志功能
-
-## 💡 使用建议
-
-### 🎯 什么时候选择独立模式：
-- ✅ 只需要代码审查功能
-- ✅ 希望零维护成本
-- ✅ 对响应速度有要求
-- ✅ 不需要复杂的工作流
-
-### 🎯 什么时候选择 Mastra 模式：
-- ✅ 需要构建复杂的 AI 应用
-- ✅ 要使用多个 AI 代理
-- ✅ 需要工作流编排
-- ✅ 需要记忆和状态管理
-
-## 🔧 自定义代码审查规则
-
-### 独立模式
-
-编辑 `src/cloudflare/standalone-worker.ts` 中的 prompt：
-
-```typescript
-let prompt = `你的自定义审查指令...`;
-```
-
-### Mastra 模式
+### 添加新的代码审查规则
 
 编辑 `src/agents/codeReviewer.ts`：
 
 ```typescript
 export const codeReviewAgent = new Agent({
-  instructions: '你的自定义审查指令...'
+  name: 'code-reviewer',
+  instructions: `
+    你是一个专业的代码审查专家。请重点关注：
+    1. 安全漏洞检测
+    2. 性能优化建议
+    3. 代码可维护性
+    4. 最佳实践检查
+    
+    特别注意：
+    - SQL 注入风险
+    - XSS 攻击向量
+    - 内存泄漏可能性
+    - 错误处理完整性
+  `,
+  model: anthropic('claude-3-5-sonnet-20241022'),
+  outputSchema: CodeReviewSchema
 });
 ```
 
-## 实际使用示例
+### 创建新的工作流
 
-### GitHub Actions 集成
+在 `src/workflows/` 中添加新文件：
 
-```yaml
-# .github/workflows/code-review.yml
-- name: Code Review
-  run: |
-    curl -X POST https://your-worker.workers.dev/api/review \
-      -H "Content-Type: application/json" \
-      -d "{\"code\": \"$(cat ${{ github.event.pull_request.diff_url }})\", \"language\": \"javascript\"}"
+```typescript
+// src/workflows/securityAuditWorkflow.ts
+export const securityAuditWorkflow = new Workflow({
+  name: 'security-audit-workflow',
+  triggerSchema: z.object({
+    code: z.string(),
+    language: z.string()
+  })
+});
+
+securityAuditWorkflow.step({
+  id: 'security-scan',
+  execute: async ({ context }) => {
+    // 安全扫描逻辑
+  }
+});
 ```
 
-### 网页应用集成
+### 添加新的 API 端点
 
-```javascript
-async function reviewMyCode(code) {
-  const response = await fetch('https://your-worker.workers.dev/api/review', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code, language: 'javascript' })
+在 `src/cloudflare/worker.ts` 中添加路由：
+
+```typescript
+// 添加安全审计端点
+if (url.pathname === '/api/security-audit') {
+  const result = await client.runWorkflow({
+    name: 'security-audit-workflow',
+    data: body
   });
-  return await response.json();
+  // 返回结果
 }
 ```
 
+## 📈 监控和日志
+
+### 查看 Mastra 服务器日志
+
+```bash
+# 本地开发
+npm run dev  # 控制台会显示详细日志
+
+# 生产环境
+# 查看你的服务器平台日志（Railway/Vercel/Docker）
+```
+
+### Cloudflare Workers 日志
+
+```bash
+# 实时查看 Worker 日志
+wrangler tail
+
+# 查看特定部署的日志
+wrangler tail --env production
+```
+
+## 🔍 故障排除
+
+### 常见问题
+
+1. **MastraClient 连接失败**
+   ```bash
+   # 检查 MASTRA_BASE_URL 是否正确
+   curl https://your-mastra-server.com/health
+   ```
+
+2. **Claude API 调用失败**
+   ```bash
+   # 检查 API Key 是否设置正确
+   echo $ANTHROPIC_API_KEY
+   ```
+
+3. **Worker 部署失败**
+   ```bash
+   # 检查 wrangler.toml 配置
+   wrangler whoami
+   wrangler deploy --dry-run
+   ```
+
+## 🌟 最佳实践
+
+### 1. **环境分离**
+```bash
+# 开发环境
+MASTRA_BASE_URL=http://localhost:4111
+
+# 测试环境  
+MASTRA_BASE_URL=https://test-mastra-server.com
+
+# 生产环境
+MASTRA_BASE_URL=https://prod-mastra-server.com
+```
+
+### 2. **错误处理**
+- 在 Worker 中实现重试逻辑
+- 设置合理的超时时间
+- 记录详细的错误日志
+
+### 3. **性能优化**
+- 使用 Mastra 的缓存功能
+- 实现请求去重
+- 监控响应时间
+
 ## 技术栈
 
-- **独立模式**: Cloudflare Workers + AI SDK + Claude API
-- **Mastra 模式**: Mastra Framework + MastraClient + Claude API
-- **共同**: TypeScript + Zod + Claude 3.5 Sonnet
-
-## 重要说明
-
-1. **独立模式更适合大多数用户**: 如果你只需要代码审查功能，强烈推荐使用独立模式
-2. **成本考虑**: 独立模式只产生 Cloudflare Workers 和 Claude API 的费用
-3. **可扩展性**: 独立模式自动扩容，无需管理服务器
+- **Mastra Framework** - AI 代理和工作流管理
+- **MastraClient** - 客户端连接库
+- **Cloudflare Workers** - 边缘计算平台
+- **Claude 3.5 Sonnet** - AI 模型
+- **TypeScript** - 类型安全开发
+- **Zod** - 运行时类型验证
 
 ## 贡献
 
