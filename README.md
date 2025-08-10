@@ -141,33 +141,52 @@ wrangler deploy
 
 ```
 src/
-├── mastra/           # Mastra 入口点（必需）
-│   └── index.ts
+├── mastra/           # Mastra 入口点（CLI 必需）
+│   └── index.ts      # Mastra 实例定义
 ├── agents/           # AI 代理定义
 │   └── codeReviewer.ts
 ├── workflows/        # 工作流程定义
 │   └── reviewWorkflow.ts
-├── api/             # API 处理程序
+├── api/             # API 处理程序 (使用 MastraClient)
 │   └── review.ts
 ├── cloudflare/      # Cloudflare Workers 配置
 │   └── worker.ts
 └── index.ts         # 主入口文件
 ```
 
-## 配置
+## 架构说明
 
-### Mastra 实例配置
+### Mastra 实例 vs MastraClient
 
-主要配置在 `src/mastra/index.ts` 中：
+- **`src/mastra/index.ts`**: 定义 Mastra 实例，供 CLI 使用
+- **`src/api/review.ts`**: 使用 `MastraClient` 调用工作流程
+- **双重架构**: 满足 Mastra CLI 要求同时支持客户端调用
 
 ```typescript
+// Mastra 实例 (for CLI)
 export const mastra = new Mastra({
   name: 'codereview-agent',
   agents: [codeReviewAgent],
-  workflows: [codeReviewWorkflow],
-  // ... 其他配置
+  workflows: [codeReviewWorkflow]
+});
+
+// MastraClient (for API calls)
+const client = new MastraClient({
+  baseUrl: process.env.MASTRA_BASE_URL || 'http://localhost:4111'
 });
 ```
+
+## 依赖版本
+
+```json
+{
+  "@mastra/client-js": "0.10.20",
+  "@mastra/deployer-cloudflare": "0.11.5",
+  "@mastra/core": "^0.13.1"
+}
+```
+
+## 配置
 
 ### 代理配置
 
@@ -182,6 +201,10 @@ export const codeReviewAgent = new Agent({
 });
 ```
 
+### 工作流配置
+
+在 `src/workflows/reviewWorkflow.ts` 中定义审查流程。
+
 ## 开发
 
 ### 添加新的代码审查规则
@@ -194,7 +217,7 @@ export const codeReviewAgent = new Agent({
 
 ### 添加新的 API 端点
 
-在 `src/api/` 中添加新的处理器。
+在 `src/api/` 中添加新的处理器，使用 `MastraClient` 进行调用。
 
 ## 使用示例
 
@@ -232,6 +255,7 @@ console.log(result);
 ## 技术栈
 
 - **Mastra Framework** - AI 代理和工作流管理
+- **MastraClient** - 客户端调用接口
 - **Claude 3.5 Sonnet** - 强大的代码审查 AI 模型  
 - **TypeScript** - 类型安全的开发体验
 - **Cloudflare Workers** - 无服务器部署平台
@@ -240,8 +264,8 @@ console.log(result);
 ## 重要说明
 
 1. **入口文件位置**: Mastra CLI 要求入口文件必须位于 `src/mastra/index.ts`
-2. **Mastra 实例**: 使用 `new Mastra()` 而不是 `MastraClient` 来初始化
-3. **工作流注册**: 所有工作流必须在 Mastra 实例中注册
+2. **双重架构**: 项目同时支持 Mastra 实例（CLI）和 MastraClient（API 调用）
+3. **版本兼容**: 使用指定版本的 `@mastra/client-js` 和 `@mastra/deployer-cloudflare`
 
 ## 贡献
 
