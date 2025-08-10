@@ -1,9 +1,15 @@
+import { MastraClient } from '@mastra/client-js';
 import { mastra } from './mastra/index.js';
 import { codeReviewWorkflow } from './workflows/reviewWorkflow.js';
 import { reviewCode } from './api/review.js';
 
+// Initialize Mastra client for external API calls
+const client = new MastraClient({
+  baseUrl: process.env.MASTRA_BASE_URL || 'http://localhost:4111'
+});
+
 // Export main functions for use
-export { reviewCode, codeReviewWorkflow, mastra };
+export { reviewCode, codeReviewWorkflow, mastra, client };
 export { codeReviewAgent } from './agents/codeReviewer.js';
 
 // Example usage function
