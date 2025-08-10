@@ -1,0 +1,35 @@
+{
+  "name": "mastra-codereview-agent",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "mastra dev",
+    "build": "mastra build",
+    "start": "mastra start",
+    "deploy": "mastra deploy"
+  },
+  "keywords": ["mastra", "ai", "code-review", "claude", "cloudflare"],
+  "author": "",
+  "license": "ISC",
+  "description": "A code review agent built with Mastra and Claude, deployable to Cloudflare Workers",
+  "type": "module",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.2.12",
+    "@mastra/core": "^0.13.1",
+    "@mastra/client-js": "^0.13.1",
+    "@mastra/deployer-cloudflare": "^0.13.1",
+    "@mastra/libsql": "^0.13.1",
+    "@mastra/loggers": "^0.10.6",
+    "@mastra/memory": "^0.12.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.2.1",
+    "mastra": "^0.10.20",
+    "typescript": "^5.9.2"
+  }
+}
