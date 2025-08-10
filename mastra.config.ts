@@ -11,7 +11,21 @@ export default config({
       tools: []
     }
   ],
-  workflows: [],
+  workflows: [
+    {
+      name: 'code-review-workflow',
+      triggerSchema: {
+        type: 'object',
+        properties: {
+          code: { type: 'string' },
+          language: { type: 'string' },
+          context: { type: 'string' },
+          filename: { type: 'string' }
+        },
+        required: ['code']
+      }
+    }
+  ],
   tools: [],
   memory: {
     provider: 'upstash',
