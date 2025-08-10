@@ -141,6 +141,8 @@ wrangler deploy
 
 ```
 src/
+├── mastra/           # Mastra 入口点（必需）
+│   └── index.ts
 ├── agents/           # AI 代理定义
 │   └── codeReviewer.ts
 ├── workflows/        # 工作流程定义
@@ -154,25 +156,45 @@ src/
 
 ## 配置
 
-主要配置在 `mastra.config.ts` 中：
+### Mastra 实例配置
 
-- **Agent**: 配置 Claude 模型和指令
-- **Memory**: 配置记忆提供者
-- **Logger**: 配置日志级别
+主要配置在 `src/mastra/index.ts` 中：
+
+```typescript
+export const mastra = new Mastra({
+  name: 'codereview-agent',
+  agents: [codeReviewAgent],
+  workflows: [codeReviewWorkflow],
+  // ... 其他配置
+});
+```
+
+### 代理配置
+
+在 `src/agents/codeReviewer.ts` 中自定义代码审查规则：
+
+```typescript
+export const codeReviewAgent = new Agent({
+  name: 'code-reviewer',
+  instructions: '你的自定义代码审查指令...',
+  model: anthropic('claude-3-5-sonnet-20241022'),
+  outputSchema: CodeReviewSchema
+});
+```
 
 ## 开发
 
 ### 添加新的代码审查规则
 
-在 `src/agents/codeReviewer.ts` 中修改 agent 的指令：
-
-```typescript
-instructions: `你的自定义代码审查指令...`
-```
+在 `src/agents/codeReviewer.ts` 中修改 agent 的指令。
 
 ### 自定义工作流
 
 在 `src/workflows/` 中创建新的工作流程。
+
+### 添加新的 API 端点
+
+在 `src/api/` 中添加新的处理器。
 
 ## 使用示例
 
@@ -209,11 +231,17 @@ console.log(result);
 
 ## 技术栈
 
-- **Mastra**: AI 代理框架
-- **Claude 3.5 Sonnet**: AI 模型
-- **TypeScript**: 开发语言
-- **Cloudflare Workers**: 部署平台
-- **Zod**: 数据验证
+- **Mastra Framework** - AI 代理和工作流管理
+- **Claude 3.5 Sonnet** - 强大的代码审查 AI 模型  
+- **TypeScript** - 类型安全的开发体验
+- **Cloudflare Workers** - 无服务器部署平台
+- **Zod** - 运行时类型验证
+
+## 重要说明
+
+1. **入口文件位置**: Mastra CLI 要求入口文件必须位于 `src/mastra/index.ts`
+2. **Mastra 实例**: 使用 `new Mastra()` 而不是 `MastraClient` 来初始化
+3. **工作流注册**: 所有工作流必须在 Mastra 实例中注册
 
 ## 贡献
 
