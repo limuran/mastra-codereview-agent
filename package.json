@@ -16,7 +16,8 @@
     "logs:worker:production": "wrangler tail --env production",
     "health:check": "curl $MASTRA_BASE_URL/health || curl http://localhost:4111/health",
     "test:api": "curl -X POST $MASTRA_BASE_URL/api/review -H 'Content-Type: application/json' -d '{\"code\":\"function test(){return 1;}\",\"language\":\"javascript\"}' || curl -X POST http://localhost:4111/api/review -H 'Content-Type: application/json' -d '{\"code\":\"function test(){return 1;}\",\"language\":\"javascript\"}'",
-    "setup:env": "cp .env.example .env && echo 'Please edit .env file with your API keys'"
+    "setup:env": "cp .env.example .env && echo 'Please edit .env file with your API keys'",
+    "clean": "rm -rf .mastra/ node_modules/ && npm install"
   },
   "keywords": ["mastra", "ai", "code-review", "claude", "cloudflare"],
   "author": "",
@@ -28,18 +29,18 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",
-    "@mastra/core": "^0.13.1",
+    "@mastra/core": "0.10.20",
     "@mastra/client-js": "0.10.20",
     "@mastra/deployer-cloudflare": "0.11.5",
-    "@mastra/libsql": "^0.13.1",
-    "@mastra/loggers": "^0.10.6",
-    "@mastra/memory": "^0.12.1",
+    "@mastra/libsql": "0.10.20",
+    "@mastra/loggers": "0.10.20",
+    "@mastra/memory": "0.10.20",
     "ai": "^4.0.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^24.2.1",
-    "mastra": "^0.10.20",
+    "mastra": "0.10.20",
     "typescript": "^5.9.2"
   }
 }
