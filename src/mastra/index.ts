@@ -4,7 +4,7 @@ import { codeReviewAgent } from '../agents/codeReviewer.js';
 import { codeReviewWorkflow } from '../workflows/reviewWorkflow.js';
 
 // Initialize Mastra instance
-export const mastra = new Mastra({
+const mastra = new Mastra({
   name: 'codereview-agent',
   agents: [codeReviewAgent],
   workflows: [codeReviewWorkflow],
@@ -20,4 +20,5 @@ export const mastra = new Mastra({
 });
 
 // Export for use in other modules
+export { mastra };
 export default mastra;
