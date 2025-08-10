@@ -1,14 +1,10 @@
-import { MastraClient } from '@mastra/client-js';
+import { mastra } from '../mastra/index.js';
 import { codeReviewWorkflow } from '../workflows/reviewWorkflow.js';
 import type { ReviewInput } from '../workflows/reviewWorkflow.js';
 
-const client = new MastraClient({
-  baseUrl: process.env.MASTRA_BASE_URL || 'http://localhost:4111'
-});
-
 export async function reviewCode(input: ReviewInput) {
   try {
-    const result = await client.runWorkflow({
+    const result = await mastra.runWorkflow({
       name: 'code-review-workflow',
       data: input
     });
