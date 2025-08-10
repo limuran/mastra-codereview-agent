@@ -8,8 +8,15 @@
     "build": "mastra build",
     "start": "mastra start",
     "deploy": "mastra deploy",
-    "deploy:standalone": "wrangler deploy --config wrangler.standalone.toml",
-    "preview:standalone": "wrangler dev --config wrangler.standalone.toml"
+    "deploy:worker": "wrangler deploy",
+    "deploy:worker:staging": "wrangler deploy --env staging",
+    "deploy:worker:production": "wrangler deploy --env production",
+    "preview:worker": "wrangler dev",
+    "logs:worker": "wrangler tail",
+    "logs:worker:production": "wrangler tail --env production",
+    "health:check": "curl $MASTRA_BASE_URL/health || curl http://localhost:4111/health",
+    "test:api": "curl -X POST $MASTRA_BASE_URL/api/review -H 'Content-Type: application/json' -d '{\"code\":\"function test(){return 1;}\",\"language\":\"javascript\"}' || curl -X POST http://localhost:4111/api/review -H 'Content-Type: application/json' -d '{\"code\":\"function test(){return 1;}\",\"language\":\"javascript\"}'",
+    "setup:env": "cp .env.example .env && echo 'Please edit .env file with your API keys'"
   },
   "keywords": ["mastra", "ai", "code-review", "claude", "cloudflare"],
   "author": "",
