@@ -20,8 +20,8 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",
     "@mastra/core": "^0.13.1",
-    "@mastra/client-js": "^0.13.1",
-    "@mastra/deployer-cloudflare": "^0.13.1",
+    "@mastra/client-js": "0.10.20",
+    "@mastra/deployer-cloudflare": "0.11.5",
     "@mastra/libsql": "^0.13.1",
     "@mastra/loggers": "^0.10.6",
     "@mastra/memory": "^0.12.1",
